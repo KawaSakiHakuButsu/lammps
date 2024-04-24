@@ -2624,3 +2624,13 @@ void *FixGCMC::extract(const char *name, int &dim)
   }
   return nullptr;
 }
+
+void FixGCMC::reset_target(double t_new)
+{
+  reservoir_temperature = t_new;
+}
+
+void FixGCMC::reset_mu(double mu_new)
+{
+  chemical_potential = mu_new;
+}

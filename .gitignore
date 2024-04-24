@@ -42,6 +42,7 @@ Thumbs.db
 .vs
 
 #cmake
+/bin
 /build*
 /CMakeCache.txt
 /CMakeFiles/

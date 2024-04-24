@@ -240,6 +240,7 @@ class Fix : protected Pointers {
   virtual int dof(int) { return 0; }
   virtual void deform(int) {}
   virtual void reset_target(double) {}
+  virtual void reset_mu(double) {}
   virtual void reset_dt() {}
   virtual void enforce2d() {}
 

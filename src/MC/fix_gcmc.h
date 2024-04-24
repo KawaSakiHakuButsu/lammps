@@ -36,6 +36,8 @@ class FixGCMC : public Fix {
   void write_restart(FILE *) override;
   void restart(char *) override;
   void *extract(const char *, int &) override;
+  void reset_target(double) override;
+  void reset_mu(double) override;
 
  private:
   int molecule_group, molecule_group_bit;

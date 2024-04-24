@@ -5,6 +5,8 @@
 /Make.py.last
 /lmp_*
 
+/USER-DEEPMD
+
 /style_*.h
 /packages_*.h
 /lmpinstalledpkgs.h
@@ -1474,6 +1476,8 @@
 /temper.h
 /temper_grem.cpp
 /temper_grem.h
+/temper_muvt.cpp
+/temper_muvt.h
 /temper_npt.cpp
 /temper_npt.h
 /third_order.cpp
@@ -1690,3 +1694,13 @@
 /pair_vashishta*.cpp
 /pair_vashishta*.h
 
+/compute_deeptensor_atom.cpp
+/compute_deeptensor_atom.h
+/deepmd_version.h
+/fix_dplr.cpp
+/fix_dplr.h
+/fix_ttm_dp.h
+/pair_deepmd.cpp
+/pair_deepmd.h
+/pppm_dplr.cpp
+/pppm_dplr.h
