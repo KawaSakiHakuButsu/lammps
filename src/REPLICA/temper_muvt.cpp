@@ -42,7 +42,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-TemperMuVT::TemperMuVT(LAMMPS *lmp) : Command(lmp) {}
+TemperMuVT::TemperMuVT(LAMMPS *lmp) : Command(lmp), tempfix(nullptr) {}
 
 /* ---------------------------------------------------------------------- */
 
@@ -68,30 +68,39 @@ void TemperMuVT::command(int narg, char **arg)
     error->universe_all(FLERR,"More than one processor partition required for temper/muvt command");
   if (domain->box_exist == 0)
     error->universe_all(FLERR,"Temper/muvt command before simulation box is defined");
-  if (narg != 8 && narg != 9) error->universe_all(FLERR,"Illegal temper/muvt command");
+  if (narg != 7 && narg != 8 && narg != 9 && narg != 10) error->universe_all(FLERR,"Illegal temper/muvt command");
 
   int nsteps = utils::inumeric(FLERR,arg[0],false,lmp);
   nevery = utils::inumeric(FLERR,arg[1],false,lmp);
   double temp = utils::numeric(FLERR,arg[2],false,lmp);
-  double mu = utils::numeric(FLERR,arg[6],false,lmp);
+  double mu = utils::numeric(FLERR,arg[3],false,lmp);
 
   // ignore temper command, if walltime limit was already reached
 
   if (timer->is_timeout()) return;
-
-  whichfix = modify->get_fix_by_id(arg[3]);
-  if (!whichfix)
-    error->universe_all(FLERR,fmt::format("Tempering fix ID {} is not defined", arg[3]));
   
-  gcmcfix = modify->get_fix_by_id(arg[7]);
+  gcmcfix = modify->get_fix_by_id(arg[4]);
   if (!gcmcfix)
-    error->universe_all(FLERR,fmt::format("Tempering fix ID {} is not defined", arg[7]));
+    error->universe_all(FLERR,fmt::format("Tempering fix ID {} is not defined", arg[4]));
 
-  seed_swap = utils::inumeric(FLERR,arg[4],false,lmp);
-  seed_boltz = utils::inumeric(FLERR,arg[5],false,lmp);
+  seed_swap = utils::inumeric(FLERR,arg[5],false,lmp);
+  seed_boltz = utils::inumeric(FLERR,arg[6],false,lmp);
 
   my_set_temp_mu = universe->iworld;
-  if (narg == 9) my_set_temp_mu = utils::inumeric(FLERR,arg[8],false,lmp);
+  int iarg = 7;
+  while (iarg < narg) {
+    if (strcmp(arg[iarg],"temp-fix") == 0) {
+      if (iarg+2 > narg) error->all(FLERR,"Illegal temper/muvt command");
+      tempfix = modify->get_fix_by_id(arg[iarg+1]);
+      if (!tempfix)
+        error->universe_all(FLERR,fmt::format("Tempering fix ID {} is not defined", arg[iarg+1]));
+      iarg += 2;
+    }
+    else {
+      my_set_temp_mu = utils::inumeric(FLERR,arg[iarg],false,lmp);
+      iarg++;
+    }
+  }
   if ((my_set_temp_mu < 0) || (my_set_temp_mu >= universe->nworlds))
     error->universe_one(FLERR,"Invalid temperature and mu index value");
 
@@ -106,14 +115,15 @@ void TemperMuVT::command(int narg, char **arg)
   // fix style must be appropriate for temperature control and gcmc, i.e. it needs
   // to provide a working Fix::reset_target() and must not change the volume.
 
-  if ((!utils::strmatch(whichfix->style,"^nvt")) &&
-      (!utils::strmatch(whichfix->style,"^langevin")) &&
-      (!utils::strmatch(whichfix->style,"^gl[de]$")) &&
-      (!utils::strmatch(whichfix->style,"^rigid/nvt")) &&
-      (!utils::strmatch(whichfix->style,"^temp/")))
-    error->universe_all(FLERR,"Tempering temperature fix is not supported");
-  
   if (!utils::strmatch(gcmcfix->style,"^gcmc")) error->universe_all(FLERR, "Grand canonical Monte Carlo fix is not supported");
+
+  if (tempfix)
+    if ((!utils::strmatch(tempfix->style,"^nvt")) &&
+        (!utils::strmatch(tempfix->style,"^langevin")) &&
+        (!utils::strmatch(tempfix->style,"^gl[de]$")) &&
+        (!utils::strmatch(tempfix->style,"^rigid/nvt")) &&
+        (!utils::strmatch(tempfix->style,"^temp/")))
+      error->universe_all(FLERR,"Tempering temperature fix is not supported");
 
   // setup for long tempering run
 
@@ -195,12 +205,12 @@ void TemperMuVT::command(int narg, char **arg)
 
   // if restarting tempering, reset temp target of Fix to current my_set_temp_mu
 
-  if (narg == 9) {
+  if (narg == 8 || narg == 10) {
     double new_temp = set_temp[my_set_temp_mu];
     double new_mu = set_mu[my_set_temp_mu];
-    whichfix->reset_target(new_temp);
     gcmcfix->reset_target(new_temp);
     gcmcfix->reset_mu(new_mu);
+    if (tempfix) tempfix->reset_target(new_temp);
   }
 
   // setup tempering runs
@@ -303,7 +313,7 @@ void TemperMuVT::command(int narg, char **arg)
       else
         MPI_Recv(&natom_partner,1,MPI_INT,partner,0,universe->uworld,MPI_STATUS_IGNORE);
 
-    // Acceptance criteria changed versus temper command for MuPT ensemble
+    // Acceptance criteria changed versus temper command for MuVT ensemble
       if (me_universe < partner) {
         boltz_factor = (pe - pe_partner) *
           (1.0/(boltz*set_temp[my_set_temp_mu]) -
@@ -341,9 +351,9 @@ void TemperMuVT::command(int narg, char **arg)
     if (swap) {
       new_temp = set_temp[partner_set_temp_mu];
       new_mu = set_mu[partner_set_temp_mu];
-      whichfix->reset_target(new_temp);
       gcmcfix->reset_target(new_temp);
       gcmcfix->reset_mu(new_mu);
+      if (tempfix) tempfix->reset_target(new_temp);
     }
 
     // update my_set_temp_mu and temp2world on every proc
