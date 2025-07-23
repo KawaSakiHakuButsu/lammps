@@ -1480,6 +1480,8 @@
 /temper_muvt.h
 /temper_npt.cpp
 /temper_npt.h
+/temper_npt_xchg.cpp
+/temper_npt_xchg.h
 /third_order.cpp
 /third_order.h
 /thr_data.cpp

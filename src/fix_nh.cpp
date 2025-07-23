@@ -1695,6 +1695,13 @@ void FixNH::reset_target(double t_new)
 
 /* ---------------------------------------------------------------------- */
 
+void FixNH::reset_press(double p_new)
+{
+  for (int i = 0 ; i < 3 ; ++i) p_target[i] = p_start[i] = p_stop[i] = p_new;
+}
+
+/* ---------------------------------------------------------------------- */
+
 void FixNH::reset_dt()
 {
   dtv = update->dt;
