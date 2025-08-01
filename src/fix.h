@@ -330,7 +330,8 @@ namespace FixConst {
     MIN_PRE_FORCE = 1 << 19,
     MIN_PRE_REVERSE = 1 << 20,
     MIN_POST_FORCE = 1 << 21,
-    MIN_ENERGY = 1 << 22
+    MIN_ENERGY = 1 << 22,
+    END_OF_TEMPER = 1 << 23
   };
 }
 

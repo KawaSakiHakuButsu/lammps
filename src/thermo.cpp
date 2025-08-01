@@ -99,7 +99,7 @@ static char fmtbuf[512];
 
 Thermo::Thermo(LAMMPS *_lmp, int narg, char **arg) :
     Pointers(_lmp), style(nullptr), vtype(nullptr), field2index(nullptr), argindex1(nullptr),
-    argindex2(nullptr), temperature(nullptr), pressure(nullptr), pe(nullptr)
+    argindex2(nullptr), temperature(nullptr), pressure(nullptr), pe(nullptr), fix_press(nullptr)
 {
   style = utils::strdup(arg[0]);
 
@@ -843,6 +843,9 @@ void Thermo::parse_fields(const std::string &str)
     } else if (word == "press") {
       addfield("Press", &Thermo::compute_press, FLOAT);
       index_press_scalar = add_compute(id_press, SCALAR);
+    } else if (word.substr(0, 6) == "press_") {
+      check_press_set(word);
+      addfield("PressSet", &Thermo::compute_press_set, FLOAT);
     } else if (word == "pe") {
       addfield("PotEng", &Thermo::compute_pe, FLOAT);
       index_pe = add_compute(id_pe, SCALAR);
@@ -1194,6 +1197,20 @@ void Thermo::check_press_vector(const std::string &keyword)
 }
 
 /* ----------------------------------------------------------------------
+   check whether set pressure is defined, active
+------------------------------------------------------------------------- */
+
+void Thermo::check_press_set(const std::string &keyword)
+{
+  if (!fix_press)
+  {
+    fix_press = modify->get_fix_by_id(keyword.substr(6));
+    if (!fix_press) error->all(FLERR, "Could not find thermo fix ID {}", keyword.substr(6));
+    if (!utils::strmatch(fix_press->style,"^npt")) error->all(FLERR,"Pressure of fix ID {} doesn't exist", fix_press->id);
+  }
+}
+
+/* ----------------------------------------------------------------------
    compute a single thermodynamic value, word is any keyword in custom list
    called when a variable is evaluated by Variable class
    return value as double in answer
@@ -1298,6 +1315,10 @@ int Thermo::evaluate_keyword(const std::string &word, double *answer)
   } else if (word == "press") {
     check_press_scalar(word);
     compute_press();
+
+  } else if (word.substr(0, 6) == "press_") {
+    check_press_set(word);
+    compute_press_set();
 
   } else if (word == "pe") {
     check_pe(word);
@@ -1690,6 +1711,17 @@ void Thermo::compute_temp()
 void Thermo::compute_press()
 {
   dvalue = pressure->scalar;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void Thermo::compute_press_set()
+{
+  int ifix = 1;
+  auto p_target = (double *)fix_press->extract("p_target", ifix);
+  if (p_target[0] != p_target[1] || p_target[0] != p_target[2] || p_target[1] != p_target[2])
+    error->all(FLERR,"Tempering pressure must be isotropic");
+  dvalue = p_target[0];
 }
 
 /* ---------------------------------------------------------------------- */

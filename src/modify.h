@@ -33,7 +33,7 @@ class Modify : protected Pointers {
   int n_initial_integrate, n_post_integrate, n_pre_exchange;
   int n_pre_neighbor, n_post_neighbor;
   int n_pre_force, n_pre_reverse, n_post_force_any;
-  int n_final_integrate, n_end_of_step;
+  int n_final_integrate, n_end_of_step, n_end_of_temper;
   int n_energy_couple, n_energy_global, n_energy_atom;
   int n_initial_integrate_respa, n_post_integrate_respa;
   int n_pre_force_respa, n_post_force_respa_any, n_final_integrate_respa;
@@ -71,6 +71,7 @@ class Modify : protected Pointers {
   virtual void final_integrate();
   virtual void fused_integrate(int) {}
   virtual void end_of_step();
+  virtual void end_of_temper();
   virtual double energy_couple();
   virtual double energy_global();
   virtual void energy_atom(int, double *);
@@ -162,7 +163,7 @@ class Modify : protected Pointers {
   int *list_pre_exchange, *list_pre_neighbor, *list_post_neighbor;
   int *list_pre_force, *list_pre_reverse;
   int *list_post_force, *list_post_force_group;
-  int *list_final_integrate, *list_end_of_step;
+  int *list_final_integrate, *list_end_of_step, *list_end_of_temper;
   int *list_energy_couple, *list_energy_global, *list_energy_atom;
   int *list_initial_integrate_respa, *list_post_integrate_respa;
   int *list_pre_force_respa, *list_post_force_respa;
@@ -171,7 +172,7 @@ class Modify : protected Pointers {
   int *list_min_pre_force, *list_min_pre_reverse, *list_min_post_force;
   int *list_min_energy;
 
-  int *end_of_step_every;
+  int *end_of_step_every, *end_of_temper_every;
 
   int n_timeflag;    // list of computes that store time invocation
   int *list_timeflag;
@@ -194,6 +195,7 @@ class Modify : protected Pointers {
 
   void list_init(int, int &, int *&);
   void list_init_end_of_step(int, int &, int *&);
+  void list_init_end_of_temper(int, int &, int *&);
   void list_init_energy_couple(int &, int *&);
   void list_init_energy_global(int &, int *&);
   void list_init_energy_atom(int &, int *&);

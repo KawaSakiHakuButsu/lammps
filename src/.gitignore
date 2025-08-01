@@ -1569,6 +1569,8 @@
 /fix_alchemy.h
 /fix_pimd_nvt.cpp
 /fix_pimd_nvt.h
+/fix_print_temper.cpp
+/fix_print_temper.h
 /fix_qbmsst.cpp
 /fix_qbmsst.h
 /fix_qtb.cpp

@@ -351,6 +351,7 @@ void TemperNPTXCHG::command(int narg, char **arg)
     }
     MPI_Bcast(temp2world,nworlds,MPI_INT,0,world);
 
+    if (modify->n_end_of_temper) modify->end_of_temper();
     // print out current swap status
 
     if (me_universe == 0) print_status();

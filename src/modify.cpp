@@ -52,7 +52,7 @@ Modify::Modify(LAMMPS *lmp) : Pointers(lmp)
   n_initial_integrate = n_post_integrate = 0;
   n_pre_exchange = n_pre_neighbor = n_post_neighbor = 0;
   n_pre_force = n_pre_reverse = n_post_force_any = 0;
-  n_final_integrate = n_end_of_step = 0;
+  n_final_integrate = n_end_of_step = n_end_of_temper = 0;
   n_energy_couple = n_energy_global = n_energy_atom = 0;
   n_initial_integrate_respa = n_post_integrate_respa = 0;
   n_pre_force_respa = n_post_force_respa_any = n_final_integrate_respa = 0;
@@ -67,7 +67,7 @@ Modify::Modify(LAMMPS *lmp) : Pointers(lmp)
   list_pre_exchange = list_pre_neighbor = list_post_neighbor = nullptr;
   list_pre_force = list_pre_reverse = nullptr;
   list_post_force = list_post_force_group = nullptr;
-  list_final_integrate = list_end_of_step = nullptr;
+  list_final_integrate = list_end_of_step = list_end_of_temper = nullptr;
   list_energy_couple = list_energy_global = list_energy_atom = nullptr;
   list_initial_integrate_respa = list_post_integrate_respa = nullptr;
   list_pre_force_respa = list_post_force_respa = nullptr;
@@ -77,6 +77,7 @@ Modify::Modify(LAMMPS *lmp) : Pointers(lmp)
   list_min_energy = nullptr;
 
   end_of_step_every = nullptr;
+  end_of_temper_every = nullptr;
 
   list_timeflag = nullptr;
 
@@ -145,6 +146,7 @@ Modify::~Modify()
   delete[] list_post_force_group;
   delete[] list_final_integrate;
   delete[] list_end_of_step;
+  delete[] list_end_of_temper;
   delete[] list_energy_couple;
   delete[] list_energy_global;
   delete[] list_energy_atom;
@@ -162,6 +164,7 @@ Modify::~Modify()
   delete[] list_min_energy;
 
   delete[] end_of_step_every;
+  delete[] end_of_temper_every;
   delete[] list_timeflag;
 
   restart_deallocate(0);
@@ -224,6 +227,7 @@ void Modify::init()
   list_init_post_force_group(n_post_force_group, list_post_force_group);
   list_init(FINAL_INTEGRATE, n_final_integrate, list_final_integrate);
   list_init_end_of_step(END_OF_STEP, n_end_of_step, list_end_of_step);
+  list_init_end_of_temper(END_OF_TEMPER, n_end_of_temper, list_end_of_temper);
   list_init_energy_couple(n_energy_couple, list_energy_couple);
   list_init_energy_global(n_energy_global, list_energy_global);
   list_init_energy_atom(n_energy_atom, list_energy_atom);
@@ -480,6 +484,17 @@ void Modify::end_of_step()
 {
   for (int i = 0; i < n_end_of_step; i++)
     if (update->ntimestep % end_of_step_every[i] == 0) fix[list_end_of_step[i]]->end_of_step();
+}
+
+/* ----------------------------------------------------------------------
+   end-of-temper call, only for relevant fixes
+   only call fix->end_of_step() on timesteps that are multiples of nevery
+------------------------------------------------------------------------- */
+
+void Modify::end_of_temper()
+{
+  for (int i = 0; i < n_end_of_temper; i++)
+    if (update->ntimestep % end_of_temper_every[i] == 0) fix[list_end_of_temper[i]]->end_of_step();
 }
 
 /* ----------------------------------------------------------------------
@@ -1687,6 +1702,30 @@ void Modify::list_init_end_of_step(int mask, int &n, int *&list)
     if (fmask[i] & mask) {
       list[n] = i;
       end_of_step_every[n++] = fix[i]->nevery;
+    }
+}
+
+/* ----------------------------------------------------------------------
+   create list of fix indices for end_of_temper fixes
+   also create end_of_temper_every[]
+------------------------------------------------------------------------- */
+
+void Modify::list_init_end_of_temper(int mask, int &n, int *&list)
+{
+  delete[] list;
+  delete[] end_of_temper_every;
+
+  n = 0;
+  for (int i = 0; i < nfix; i++)
+    if (fmask[i] & mask) n++;
+  list = new int[n];
+  end_of_temper_every = new int[n];
+
+  n = 0;
+  for (int i = 0; i < nfix; i++)
+    if (fmask[i] & mask) {
+      list[n] = i;
+      end_of_temper_every[n++] = fix[i]->nevery;
     }
 }
 

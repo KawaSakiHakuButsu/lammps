@@ -96,6 +96,7 @@ class Thermo : protected Pointers {
   int nfix;             // # of Fix objects called by thermo
   char **id_fix;        // their IDs
   class Fix **fixes;    // list of ptrs to the Fix objects
+  class Fix *fix_press;
 
   int nvariable;         // # of variables evaluated by thermo
   char **id_variable;    // list of variable names
@@ -115,6 +116,7 @@ class Thermo : protected Pointers {
   void check_pe(const std::string &);
   void check_press_scalar(const std::string &);
   void check_press_vector(const std::string &);
+  void check_press_set(const std::string &);
 
   typedef void (Thermo::*FnPtr)();
   void addfield(const char *, FnPtr, int);
@@ -142,6 +144,7 @@ class Thermo : protected Pointers {
   void compute_atoms();
   void compute_temp();
   void compute_press();
+  void compute_press_set();
   void compute_pe();
   void compute_ke();
   void compute_etotal();
