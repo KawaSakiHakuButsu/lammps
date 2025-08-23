@@ -2622,6 +2622,9 @@ void *FixGCMC::extract(const char *name, int &dim)
     dim = 0;
     return (void *) &exclusion_group;
   }
+  if (strcmp(name, "natoms_per_molecule") == 0) {
+    return (void *) &natoms_per_molecule;
+  }
   return nullptr;
 }
 

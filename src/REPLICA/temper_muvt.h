@@ -41,7 +41,8 @@ class TemperMuVT : public Command {
   int seed_swap;                        // 0 = toggle swaps, n = RNG for swap direction
   int seed_boltz;                       // seed for Boltz factor comparison
   class Fix *gcmcfix;                   // grand canonical Monte Carlo fix to use
-  class Fix *tempfix;                  // temperature fix to use
+  class Fix *tempfix;                   // temperature fix to use
+  int natoms_per_molecule;              // number of atoms in each inserted molecule
 
   int my_set_temp_mu;     // which set temp and mu I am simulating
   double *set_temp;    // static list of replica set temperatures

@@ -116,6 +116,8 @@ void TemperMuVT::command(int narg, char **arg)
   // to provide a working Fix::reset_target() and must not change the volume.
 
   if (!utils::strmatch(gcmcfix->style,"^gcmc")) error->universe_all(FLERR, "Grand canonical Monte Carlo fix is not supported");
+  int dim = 0;
+  natoms_per_molecule = *(int *)gcmcfix->extract("natoms_per_molecule", dim);
 
   if (tempfix)
     if ((!utils::strmatch(tempfix->style,"^nvt")) &&
@@ -318,7 +320,7 @@ void TemperMuVT::command(int narg, char **arg)
         boltz_factor = (pe - pe_partner) *
           (1.0/(boltz*set_temp[my_set_temp_mu]) -
            1.0/(boltz*set_temp[partner_set_temp_mu])) -
-          (natom - natom_partner) *
+          (natom - natom_partner) / natoms_per_molecule *
           (set_mu[my_set_temp_mu]/(boltz*set_temp[my_set_temp_mu]) -
            set_mu[partner_set_temp_mu]/(boltz*set_temp[partner_set_temp_mu]));
         if (boltz_factor >= 0.0) swap = 1;
