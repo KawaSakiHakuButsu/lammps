@@ -2631,9 +2631,20 @@ void *FixGCMC::extract(const char *name, int &dim)
 void FixGCMC::reset_target(double t_new)
 {
   reservoir_temperature = t_new;
+  beta = 1.0/(force->boltz*reservoir_temperature);
+  sigma = sqrt(force->boltz*reservoir_temperature*tfac_insert/gas_mass/force->mvv2e);
+  if (pressure_flag) zz = pressure*fugacity_coeff*beta/force->nktv2p;
 }
 
 void FixGCMC::reset_mu(double mu_new)
 {
   chemical_potential = mu_new;
+  if (strcmp(update->unit_style,"lj") == 0)
+    zz = exp(beta*chemical_potential);
+  else {
+    double lambda = sqrt(force->hplanck*force->hplanck/
+                         (2.0*MY_PI*gas_mass*force->mvv2e*
+                        force->boltz*reservoir_temperature));
+    zz = exp(beta*chemical_potential)/(pow(lambda,3.0));
+  }
 }
