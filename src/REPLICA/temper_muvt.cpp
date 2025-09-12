@@ -218,7 +218,7 @@ void TemperMuVT::command(int narg, char **arg)
   // setup tempering runs
 
   int i,which,partner,swap,partner_set_temp_mu,partner_world;
-  double pe,pe_partner,boltz_factor,new_temp,new_mu;
+  double pe,pe_partner,boltz_factor,lambda_ratio,new_temp,new_mu;
   int natom, natom_partner;
 
   if (me_universe == 0 && universe->uscreen)
@@ -323,8 +323,14 @@ void TemperMuVT::command(int narg, char **arg)
           (natom - natom_partner) / natoms_per_molecule *
           (set_mu[my_set_temp_mu]/(boltz*set_temp[my_set_temp_mu]) -
            set_mu[partner_set_temp_mu]/(boltz*set_temp[partner_set_temp_mu]));
-        if (boltz_factor >= 0.0) swap = 1;
-        else if (ranboltz->uniform() < exp(boltz_factor)) swap = 1;
+        if (strcmp(update->unit_style,"lj") == 0) {
+          if (boltz_factor >= 0.0) swap = 1;
+          else if (ranboltz->uniform() < exp(boltz_factor)) swap = 1;
+        }
+        else {
+          lambda_ratio = pow(set_temp[my_set_temp_mu] / set_temp[partner_set_temp_mu], -1.5 * (natom - natom_partner) / natoms_per_molecule);
+          if (ranboltz->uniform() < lambda_ratio * exp(boltz_factor)) swap = 1;
+        }
       }
 
       if (me_universe < partner)
@@ -370,6 +376,7 @@ void TemperMuVT::command(int narg, char **arg)
     }
     MPI_Bcast(temp2world,nworlds,MPI_INT,0,world);
 
+    if (modify->n_end_of_temper) modify->end_of_temper();
     // print out current swap status
 
     if (me_universe == 0) print_status();
