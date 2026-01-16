@@ -130,7 +130,8 @@ if os.path.isfile("includelink") or os.path.islink("includelink"):
 if os.path.isfile("liblink") or os.path.islink("liblink"):
   os.remove("liblink")
 os.symlink(os.path.join(homedir, 'include'), 'includelink')
-libpath = os.path.join(homedir, 'lib64')
+# libpath = os.path.join(homedir, 'lib64') # changed by JinB 20251208
+libpath = os.path.join(homedir, 'lib') # changed by JinB 20251208
 if not os.path.exists(libpath):
   libpath = os.path.join(homedir, 'lib')
 os.symlink(libpath, 'liblink')
