@@ -32,6 +32,8 @@ class FixRigidNHSmall : public FixRigidSmall {
   void write_restart(FILE *) override;
   void restart(char *buf) override;
   void reset_target(double) override;
+  void reset_press(double) override;
+  void *extract(const char *, int &) override;
 
  protected:
   double boltz, nktv2p, mvv2e;    // boltzman constant, conversion factors

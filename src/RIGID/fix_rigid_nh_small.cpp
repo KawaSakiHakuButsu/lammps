@@ -1395,6 +1395,29 @@ void FixRigidNHSmall::reset_target(double t_new)
 
 /* ---------------------------------------------------------------------- */
 
+void FixRigidNHSmall::reset_press(double p_new)
+{
+  for (int i = 0 ; i < 3 ; ++i) p_target[i] = p_start[i] = p_stop[i] = p_new;
+}
+
+/* ----------------------------------------------------------------------
+   extract thermostat properties
+------------------------------------------------------------------------- */
+
+void *FixRigidNHSmall::extract(const char *str, int &dim)
+{
+  if (strcmp(str, "body") == 0 || strcmp(str, "onemol") == 0 || strcmp(str, "masstotal") == 0) {
+    return FixRigidSmall::extract(str, dim);
+  }
+  dim=1;
+  if (pstat_flag && strcmp(str,"p_target") == 0) {
+    return &p_target;
+  }
+  return nullptr;
+}
+
+/* ---------------------------------------------------------------------- */
+
 void FixRigidNHSmall::allocate_order()
 {
   w = new double[t_order];

@@ -105,7 +105,8 @@ void TemperNPTXCHG::command(int narg, char **arg)
   // change the volume. This currently only applies to fix npt and
   // fix rigid/npt variants
 
-  if (!utils::strmatch(whichfix->style,"^npt"))
+  if ((!utils::strmatch(whichfix->style,"^npt")) &&
+      (!utils::strmatch(whichfix->style,"^rigid/npt")))
     error->universe_all(FLERR,"Tempering temperature and pressure fix is not supported");
 
   // setup for long tempering run

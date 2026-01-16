@@ -1206,7 +1206,7 @@ void Thermo::check_press_set(const std::string &keyword)
   {
     fix_press = modify->get_fix_by_id(keyword.substr(6));
     if (!fix_press) error->all(FLERR, "Could not find thermo fix ID {}", keyword.substr(6));
-    if (!utils::strmatch(fix_press->style,"^npt")) error->all(FLERR,"Pressure of fix ID {} doesn't exist", fix_press->id);
+    if ((!utils::strmatch(fix_press->style,"^npt")) && (!utils::strmatch(fix_press->style,"^rigid/npt"))) error->all(FLERR,"Pressure of fix ID {} doesn't exist", fix_press->id);
   }
 }
 
